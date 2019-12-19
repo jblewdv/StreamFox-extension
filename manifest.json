@@ -6,7 +6,8 @@
     "content_scripts": [
         {
           "matches": [
-            "http://localhost:3000/home"
+            "http://localhost:3000/home",
+            "https://streamfox-web.herokuapp.com/home"
           ],
           "js": ["content.js"]
         }
@@ -19,6 +20,18 @@
         "tabs",
         "cookies",
         "webRequest",
-        "http://localhost:3000/*"
+        "webRequestBlocking",
+        "http://localhost:3000/*",
+        "http://localhost:5000/*",
+        "https://streamfox-chrome-node.herokuapp.com/*",
+        "https://streamfox-web.herokuapp.com/*",
+        "https://www.hulu.com/",
+        "https://www.hulu.com/*",
+        "https://www.netflix.com/",
+        "https://www.netflix.com/*",
+        "https://www.cbs.com/",
+        "https://www.cbs.com/*",
+        "https://www.showtime.com/",
+        "https://www.showtime.com/*"
     ]
 }
