@@ -21,17 +21,16 @@
         "cookies",
         "webRequest",
         "webRequestBlocking",
-        "http://localhost:3000/*",
-        "http://localhost:5000/*",
+        "http://localhost:*/*",
         "https://streamfox-chrome-node.herokuapp.com/*",
         "https://streamfox-web.herokuapp.com/*",
-        "https://www.hulu.com/",
-        "https://www.hulu.com/*",
-        "https://www.netflix.com/",
-        "https://www.netflix.com/*",
-        "https://www.cbs.com/",
-        "https://www.cbs.com/*",
-        "https://www.showtime.com/",
-        "https://www.showtime.com/*"
+        "*://*.hulu.com/",
+        "*://*.hulu.com/*",
+        "*://*.netflix.com/",
+        "*://*.netflix.com/*",
+        "*://*.cbs.com/",
+        "*://*.cbs.com/*",
+        "*://*.showtime.com/",
+        "*://*.showtime.com/*"
     ]
 }

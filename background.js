@@ -5,7 +5,6 @@ Author: Joshua Blew
 
 */
 
-const MODE = 'prod';
 const secretKey = "my-secret-key";
 const protectedRoutes = {
     "https://streamfox-web.herokuapp.com/home": "GET",
@@ -62,8 +61,6 @@ function Request(endpoint, method, callback) {
 }
 
 
-
-
 /*
 
     INJECT COOKIE
@@ -111,7 +108,6 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
 */
 chrome.webRequest.onBeforeRequest.addListener(
     function(details) { 
-        console.log(details.url.toLowerCase());
         if (restrictedURLs.includes(details.url.toLowerCase())) {
             return {cancel: true};
         } else {
@@ -124,16 +120,48 @@ chrome.webRequest.onBeforeRequest.addListener(
 
 /*
 
+    SESSION MANAGEMENT 
+
+*/
+function cleanup(type, session) {
+    chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tabby) {
+        chrome.tabs.query({}, function(tabs) {
+            var urls = ''
+            for (let tab of tabs) {
+                urls += tab.url
+            }
+            if (!urls.includes(type)) {
+                chrome.cookies.getAll({}, function(cookies) {
+                    for (let cookie of cookies) {
+                        if (cookie.domain === '.'+type+'.com') {
+                            chrome.cookies.remove({url: "https://www" + cookie.domain + cookie.path, name: cookie.name}, function(details) {
+                                console.log("deleted a cookie: " + details);
+                            });
+                        }
+                    }
+                });
+                Request('https://streamfox-web.herokuapp.com/closeSession/'+session._id+'/'+session.service, 'POST', function(response) {
+                    if (response === true) console.log('Session successfully closed.');
+                    else console.log('There was an error closing this session!');
+                });
+            }
+        });
+    });
+
+}
+
+/*
+
     CREATE SESSION
 
 */
 chrome.runtime.onMessage.addListener(function (event) {  
     if (event.type === 'createSession') {
-        if (MODE === 'prod') var url = "https://streamfox-chrome-node.herokuapp.com/getCookies?service=";
-        else var url = "http://localhost:5000/getCookies?service=";
+        Request("https://streamfox-web.herokuapp.com/createSession?service=" + event.for, 'GET', function(err, response) {  
+            var cookies = JSON.parse(response).cookies;
+            var session = JSON.parse(response).newSession;
 
-        Request(url + event.for, 'GET', function(err, cookies) {                       
-            for (let c of JSON.parse(cookies).data) {          
+            for (let c of cookies) { 
                 chrome.cookies.set({
                     url: "https://www."+event.for+".com",
                     name: c.name,
@@ -143,18 +171,22 @@ chrome.runtime.onMessage.addListener(function (event) {
                     secure: c.secure,
                     httpOnly: c.httpOnly,
                     expirationDate: c.expires
-                }, function(res) {
-                    console.log('cookie created');
                 });
             }  
 
-            if (event.for === 'netflix') chrome.tabs.create({url: 'https://www.netflix.com/browse', active: true});
-            if (event.for === 'hulu') chrome.tabs.create({url: 'https://www.hulu.com/profiles?next=/', active: true});
-            if (event.for === 'cbs') chrome.tabs.create({url: 'https://www.cbs.com/#', active: true});
-            if (event.for === 'showtime') chrome.tabs.create({url: 'https://www.showtime.com/#', active: true});
+            if (event.for === 'netflix') chrome.tabs.create({url: 'https://www.netflix.com/browse', active: true}, function(tab) {
+                cleanup(event.for, session);
+            });
+            if (event.for === 'hulu') chrome.tabs.create({url: 'https://www.hulu.com/profiles?next=/', active: true}, function(tab) {
+                cleanup(event.for, session);
+            });
+            if (event.for === 'cbs') chrome.tabs.create({url: 'https://www.cbs.com/#', active: true}, function(tab) {
+                cleanup(event.for, session);
+            });
+            if (event.for === 'showtime') chrome.tabs.create({url: 'https://www.showtime.com/#', active: true}, function(tab) {
+                cleanup(event.for, session);
+            });
         });   
     }
 });
-
-
 
